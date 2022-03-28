@@ -8,7 +8,8 @@ float rBright = 0;
 float bBright = 0;
 int fadeSpeed = 10;
 int mode = 0;
-int maxMode = 5;
+int maxMode = 2;
+bool interruptCalled = false;
 
 void setup() {
   //Setup outputs for LEDs
@@ -23,7 +24,7 @@ void setup() {
   // Setup button and setup interrupt to detect button press
   pinMode(2, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(2), button, FALLING);
-  // Serial.begin(9600);
+//  Serial.begin(9600);
 }
 
 void startup() {
@@ -45,6 +46,7 @@ void button() {
   unsigned long int interrupt_time = millis();
   // If interrupts come faster than 200ms, assume it's a bounce and ignore
   if (interrupt_time - last_interrupt_time > 200) {
+    interruptCalled = true;
     mode++;
     if(mode > maxMode) mode = 0;
     last_interrupt_time = interrupt_time;
@@ -52,24 +54,26 @@ void button() {
 }
 
 void loop() {
+  blinkInternal(100);
+//  Serial.println("Running mode " + String(mode));
   switch(mode) {
     case 0:
-    setColor(255, 0, 0);
+    contoller1();
     break;
     case 1:
-    setColor(0, 255, 0);
+    contoller2();
     break;
     case 2:
-    setColor(0, 0, 255);
+    contoller3();
     break;
     case 3:
-    setColor(255, 255, 0);
+    contoller4();
     break;
     case 4:
-    setColor(0, 255, 255);
+    contoller5();
     break;
     case 5:
-    setColor(255, 0, 255);
+    contoller6();
     break;
   }
   // fadeColor(255, 0, 255);
@@ -84,6 +88,49 @@ void loop() {
   // digitalWrite(STATUS, LOW);
 }
 
+void blinkInternal(int x) {
+  digitalWrite(STATUS, HIGH);
+  delay(x);
+  digitalWrite(STATUS, LOW);
+}
+
+void contoller1() {
+  fadeColor(205, 91, 151);
+  delay(1000);
+  fadeColor(11, 6, 40);
+  delay(1000);
+  fadeColor(241, 219, 195);
+  delay(1000);
+}
+
+void contoller2() {
+  fadeColor(100, 35, 123);
+  delay(1000);
+  fadeColor(79, 191, 212);
+  delay(1000);
+  fadeColor(95, 21, 73);
+  delay(1000);
+}
+
+void contoller3() {
+  fadeColor(76, 90, 171);
+  delay(1000);
+  fadeColor(24, 81, 76);
+  delay(1000);
+}
+
+void contoller4() {
+  
+}
+
+void contoller5() {
+  
+}
+
+void contoller6() {
+  
+}
+
 void fadeColor(int r, int g, int b) {
   int rDiff = r - rBright;
   int gDiff = g - gBright;
@@ -94,6 +141,11 @@ void fadeColor(int r, int g, int b) {
   float bScale = (float)bDiff / totalDiff;
   //  Serial.print(String(rDiff) + ' ' + String(bDiff) + ' ' + String(gDiff) + ' ' + String(totalDiff) + '\n');
   for (int i = 0; i < totalDiff; i++) {
+    if(interruptCalled) {
+      interruptCalled = false;
+      setColor(0, 0, 0);
+      return;
+    };
     // Serial.print(String(rDiff) + ' ' + String(gDiff) + ' ' + String(bDiff) + ' ' + String(totalDiff) + ' ' + String(rScale) + ' ' + String(gScale) + ' ' + String(bScale) + ' ' + String(rBright) + ' ' + String(gBright) + ' ' + String(bBright) + '\n');
     rBright += rScale;
     gBright += gScale;
@@ -119,4 +171,3 @@ void pushColor() {
   analogWrite(BLUE_LED, (int)bBright);
   analogWrite(GREEN_LED, (int)gBright);
 }
-
